@@ -7,17 +7,17 @@ def load_data(data_dir):
     labels = []
     images = []
 
-    # 定义标签映射
+    # Define label mapping
     label_map = {'glioma': 0, 'meningioma': 1, 'notumor': 2, 'pituitary': 3}
 
-    # 遍历每个标签
+    # Iterate over each label
     for label, value in label_map.items():
         path = os.path.join(data_dir, label)
         for file in os.listdir(path):
             img_path = os.path.join(path, file)
             image = cv2.imread(img_path)
             if image is not None:
-                image = cv2.resize(image, (224, 224))  # 调整图像大小以适应模型输入
+                image = cv2.resize(image, (224, 224))  # Resize image to fit model input
                 images.append(image)
                 labels.append(value)
 
@@ -44,7 +44,7 @@ if __name__ == "__main__":
     train_images, train_labels = preprocess_data(train_images, train_labels)
     test_images, test_labels = preprocess_data(test_images, test_labels)
 
-    # 保存处理后的数据
+    # Saving of processed data
     if not os.path.exists('../data/processed'):
         os.makedirs('../data/processed')
 
