@@ -25,7 +25,7 @@ def save_masks(masks, mask_dir, image_files):
         os.makedirs(mask_dir)
     for idx, mask in enumerate(masks):
         mask_path = os.path.join(mask_dir, f"{image_files[idx]}.png")
-        cv2.imwrite(mask_path, mask * 255)  # 保存为二值图像
+        cv2.imwrite(mask_path, mask * 255)  # Save as binary image
 
 def visualize_mask(mask):
     plt.imshow(mask, cmap='gray')
@@ -35,23 +35,23 @@ if __name__ == "__main__":
     image_dir = '../data/Training'
     mask_dir = '../data/processed/train_masks'
 
-    # 加载预训练的分割模型
-    model = tf.keras.models.load_model('models/pretrained_unet_model.keras')  # 确保路径正确
+    # Loading pre-trained segmentation models
+    model = tf.keras.models.load_model('models/pretrained_unet_model.keras')  # Make sure the path is correct
 
-    # 加载图像
+    # Load Image
     images, image_files = load_images(image_dir)
 
-    # 生成分割掩码
-    images = images.astype('float32') / 255.0  # 预处理图像
+    # Generate Segmentation Mask
+    images = images.astype('float32') / 255.0  # Preprocessed images
     masks = model.predict(images)
-    masks = (masks > 0.5).astype(np.uint8)  # 二值化掩码
+    masks = (masks > 0.5).astype(np.uint8)  # binarization mask
 
-    # 可视化检查一些生成的掩码
+    # Visual inspection of some generated masks
     for i in range(5):
         visualize_mask(masks[i, :, :, 0])
 
-    # 生成的掩码文件名与图像文件名一致
+    # The generated mask file name matches the image file name
     image_files = [f"img_{idx}" for idx in range(len(images))]
 
-    # 保存掩码
+    # Save Mask
     save_masks(masks, mask_dir, image_files)
