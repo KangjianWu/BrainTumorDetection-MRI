@@ -1,1 +1,1 @@
-web: python src/interface.py
+web: python src/inference.py
