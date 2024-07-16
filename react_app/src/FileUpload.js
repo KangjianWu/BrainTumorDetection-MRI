@@ -2,81 +2,97 @@ import React, { useState, useRef } from 'react';
 import axios from 'axios';
 import './App.css';
 
-function FileUpload() {
-    const [file, setFile] = useState(null);
-    const [classification, setClassification] = useState('');
-    const [maskPath, setMaskPath] = useState('');
+function App() {
+    const [files, setFiles] = useState([]);
+    const [results, setResults] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const fileInputRef = useRef(null);
 
     const handleFileChange = (event) => {
-        const selectedFile = event.target.files[0];
-        setFile(selectedFile);
+        setFiles(Array.from(event.target.files));
     };
 
     const handleUpload = async () => {
-        if (!file) {
-            alert("Please select a file first.");
+        if (files.length === 0) {
+            alert("Please select at least one file.");
             return;
         }
 
         setIsLoading(true);
         const formData = new FormData();
-        formData.append('file', file);
+        files.forEach((file) => formData.append('files', file));
 
         try {
-            const response = await axios.post('http://127.0.0.1:5000/predict', formData, {
+            const response = await axios.post('http://127.0.0.1:5000/batch_predict', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }
             });
-            setClassification(response.data.prediction);
-            setMaskPath(response.data.mask_path);
+            setResults(response.data.results);
         } catch (error) {
-            console.error('Error uploading file:', error);
-            alert('Error uploading file: ' + error.message);
+            console.error('Error uploading files:', error);
+            alert('Error uploading files: ' + error.message);
         } finally {
             setIsLoading(false);
         }
     };
 
     return (
-        <div className="file-upload-container">
-            <h2>Upload MRI Image</h2>
-            <div className="file-input-wrapper">
-                <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleFileChange}
-                    accept="image/*"
-                    className="file-input"
-                />
+        <div className="app-container">
+            <h1>Brain Tumor MRI Segmentation</h1>
+
+            <div className="file-upload-container">
+                <h2>Upload MRI Images</h2>
+                <div className="file-input-wrapper">
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleFileChange}
+                        accept="image/*"
+                        multiple
+                        className="file-input"
+                        style={{display: 'none'}}
+                    />
+                    <button onClick={() => fileInputRef.current.click()} className="select-files-button">
+                        Select Files
+                    </button>
+                    <span>{files.length > 0 ? `${files.length} file(s) selected` : 'No files selected'}</span>
+                </div>
                 <button
-                    onClick={() => fileInputRef.current.click()}
-                    className="custom-file-button"
+                    onClick={handleUpload}
+                    disabled={files.length === 0 || isLoading}
+                    className="upload-button"
                 >
-                    {file ? file.name : "Choose a file"}
+                    {isLoading ? "Uploading..." : "Upload and Analyze"}
                 </button>
             </div>
-            <button onClick={handleUpload} disabled={!file || isLoading} className="upload-button">
-                {isLoading ? "Uploading..." : "Upload"}
-            </button>
 
-            {isLoading && <p>Processing image...</p>}
+            {isLoading && <p>Processing images...</p>}
 
-            {classification && (
-                <div className="result-container">
-                    <h3>Classification: {classification}</h3>
-                    {maskPath && (
-                        <div>
-                            <h3>Segmentation Mask:</h3>
-                            <img src={`http://127.0.0.1:5000/${maskPath}`} alt="Segmentation Mask" className="mask-image" />
+            {results.length > 0 && (
+                <div className="results-container">
+                    <h2>Results:</h2>
+                    {results.map((result, index) => (
+                        <div key={index} className="result-item">
+                            <h3>File: {result.filename}</h3>
+                            <p>Classification: {result.prediction}</p>
+                            <p>Estimated Tumor Area: {result.tumor_area} pixels</p>
+                            <p>Relative Tumor Size: {result.relative_size.toFixed(2)}%</p>
+                            {result.mask_path && (
+                                <div>
+                                    <h4>Segmentation Mask:</h4>
+                                    <div className="image-container">
+                                        <img src={`http://127.0.0.1:5000/${result.mask_path}`} alt="Segmentation Mask" className="mask-image" />
+                                        <img src={`http://127.0.0.1:5000/uploads/${result.filename}`} alt="Original MRI" className="original-image" />
+                                    </div>
+                                </div>
+                            )}
                         </div>
-                    )}
+                    ))}
                 </div>
             )}
         </div>
     );
 }
 
-export default FileUpload;
+export default App;
