@@ -1,6 +1,0 @@
-Flask
-Flask-CORS
-tensorflow
-numpy
-opencv-python
-requests
