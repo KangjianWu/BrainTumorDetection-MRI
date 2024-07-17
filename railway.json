@@ -5,23 +5,31 @@
       "phases": {
         "setup": {
           "nixpkgs": [
+            "python3",
+            "python3Packages.pip",
             "libglvnd",
             "libGL",
             "libGLU"
           ],
           "cmds": [
             "apt-get update",
-            "apt-get install -y libgl1-mesa-glx libglib2.0-0"
+            "apt-get install -y libgl1-mesa-glx libglib2.0-0 libsm6 libxext6 libxrender-dev",
+            "python3 --version",
+            "which python3"
           ]
         },
         "install": {
           "cmds": [
-            "pip install --no-cache-dir -r requirements.txt"
+            "python3 -m pip install --no-cache-dir -r requirements.txt"
           ]
         },
         "start": {
-          "cmd": "python src/interface.py"
+          "cmd": "python3 src/interface.py"
         }
+      },
+      "env": {
+        "PYTHONUNBUFFERED": "1",
+        "PATH": "/usr/local/bin:$PATH"
       }
     }
   }
